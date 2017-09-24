@@ -11,6 +11,12 @@ repositories {
 }
 
 dependencies {
+    // TODO: find out how to manage PUT, DELETE methods or skip it
+//    compile("ru.odnoklassniki:one-nio:1.0.0")
+
+    // Apache commons
+    compile("org.apache.commons:commons-io:1.3.2")
+
     // Annotations for better code documentation
     compile("com.intellij:annotations:12.0")
 
