@@ -8,11 +8,13 @@ plugins {
 
 repositories {
     jcenter()
+
+//    For one-nio
+    maven { setUrl("https://jitpack.io") }
 }
 
 dependencies {
-    // TODO: find out how to manage PUT, DELETE methods or skip it
-//    compile("ru.odnoklassniki:one-nio:1.0.0")
+    compile("com.github.olerom:one-nio:master-SNAPSHOT")
 
     // Apache commons
     compile("org.apache.commons:commons-io:1.3.2")
