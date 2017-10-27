@@ -1,7 +1,10 @@
 package ru.mail.polis;
 
 import org.jetbrains.annotations.NotNull;
+import ru.mail.polis.olerom.Configuration;
+import ru.mail.polis.olerom.ConfigurationImpl;
 import ru.mail.polis.olerom.ServiceImpl;
+import ru.mail.polis.olerom.cluster.TopologyImpl;
 import ru.mail.polis.olerom.storage.DummyDaoImpl;
 
 import java.io.File;
@@ -49,6 +52,6 @@ final class KVServiceFactory {
             throw new IllegalArgumentException("Path is not a directory: " + data);
         }
 
-        return new ServiceImpl(port, new DummyDaoImpl(data));
+        return new ServiceImpl(new ConfigurationImpl(port), new DummyDaoImpl(data), new TopologyImpl(topology));
     }
 }
