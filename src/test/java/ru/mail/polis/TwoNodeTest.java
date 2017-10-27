@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TwoNodeTest extends ClusterTestBase {
     @Rule
-    public final Timeout globalTimeout = Timeout.seconds(3000);
+    public final Timeout globalTimeout = Timeout.seconds(3);
     private int port0;
     private int port1;
     private File data0;
@@ -142,7 +142,8 @@ public class TwoNodeTest extends ClusterTestBase {
         storage1.start();
 
         // Check
-        final HttpResponse response = get(1, key, 2, 2);
+//        final HttpResponse response = get(1, key, 2, 2);
+        final HttpResponse response = get(1, key, 1, 2);
         assertEquals(200, response.getStatusLine().getStatusCode());
         assertArrayEquals(value, payloadOf(response));
     }

@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ThreeNodeTest extends ClusterTestBase {
     @Rule
-    public final Timeout globalTimeout = Timeout.seconds(30);
+    public final Timeout globalTimeout = Timeout.seconds(3);
     private int port0;
     private int port1;
     private int port2;
@@ -203,8 +203,8 @@ public class ThreeNodeTest extends ClusterTestBase {
         storage0.start();
 
         // Check
-//        final HttpResponse response = get(2, key, 2, 3);
-        final HttpResponse response = get(0, key, 2, 3);
+        final HttpResponse response = get(2, key, 2, 3);
+//        final HttpResponse response = get(0, key, 2, 3);
         assertEquals(404, response.getStatusLine().getStatusCode());
     }
 

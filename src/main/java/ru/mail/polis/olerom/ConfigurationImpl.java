@@ -27,4 +27,9 @@ public class ConfigurationImpl implements Configuration {
     public ServerConfig getServerConfig() {
         return ConfigParser.parse(CONF.replace("{PORT}", port + ""), ServerConfig.class);
     }
+
+    @Override
+    public int getPort() {
+        return this.port;
+    }
 }

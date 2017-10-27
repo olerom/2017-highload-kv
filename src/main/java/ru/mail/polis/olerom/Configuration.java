@@ -11,4 +11,6 @@ import org.jetbrains.annotations.NotNull;
 public interface Configuration {
     @NotNull
     ServerConfig getServerConfig();
+
+    int getPort();
 }
