@@ -15,4 +15,3 @@
 
 # ...even if they are in subdirectories
 !*/
-!/src/test/java/ru/mail/polis/SingleNodeTest.java

@@ -73,16 +73,13 @@ public class NodeManager {
     @NotNull
     public BaseMessage handlePut(@NotNull final String id,
                                  @NotNull final byte[] value) {
-        int deaths = 0;
-        int visited = 0;
         int satisfied = 0;
         for (String hostAndPort : topology.getNodes()) {
             if (hostAndPort.equals(METHOD_AND_DOMAIN + port)) {
                 continue;
             }
 
-            visited++;
-            HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
+            final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
 
             try {
                 Response put = client.put(INTERCONNECTION_URI + id, value);
@@ -96,7 +93,7 @@ public class NodeManager {
             }
         }
 
-        return new BaseMessage(satisfied, visited, deaths, ack, from);
+        return new BaseMessage(satisfied, ack, from);
     }
 
     @NotNull
@@ -107,7 +104,7 @@ public class NodeManager {
                 continue;
             }
 
-            HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
+            final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
             try {
                 Response delete = client.delete(INTERCONNECTION_URI + id);
                 if (delete.getStatus() == OK_STATUS) {
@@ -119,7 +116,7 @@ public class NodeManager {
             }
         }
 
-        return new BaseMessage(deleted, 0, 0, ack, from);
+        return new BaseMessage(deleted, ack, from);
     }
 }
 

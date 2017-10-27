@@ -1,8 +1,5 @@
 package ru.mail.polis.olerom.cluster;
 
-import one.nio.http.Response;
-import org.apache.commons.io.filefilter.NotFileFilter;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -11,17 +8,21 @@ import org.jetbrains.annotations.Nullable;
  * @author olerom
  */
 public class BodyMessage extends BaseMessage {
+    private final int visitedNodes;
+    private final int deadNodes;
 
     @Nullable
     private final byte[] value;
 
     public BodyMessage(final int succeedNodes,
-                       final int visitedNodes,
-                       final int deadNodes,
                        final int ack,
                        final int from,
+                       final int visitedNodes,
+                       final int deadNodes,
                        @Nullable final byte[] value) {
-        super(succeedNodes, visitedNodes, deadNodes, ack, from);
+        super(succeedNodes, ack, from);
+        this.visitedNodes = visitedNodes;
+        this.deadNodes = deadNodes;
         this.value = value;
     }
 

@@ -15,7 +15,6 @@ public class ConfigurationImpl implements Configuration {
             "acceptors:\n" +
             " - port: {PORT}\n";
 
-    @NotNull
     final private int port;
 
     public ConfigurationImpl(final int port) {
