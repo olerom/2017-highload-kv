@@ -67,7 +67,7 @@ public class NodeManager {
         }
 
 
-        return new BodyMessage(satisfied, visited, deaths, ack, from, response);
+        return new BodyMessage(satisfied, ack, from, visited, deaths, response);
     }
 
     @NotNull
