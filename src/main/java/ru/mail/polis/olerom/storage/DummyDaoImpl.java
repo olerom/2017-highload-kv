@@ -21,18 +21,28 @@ public class DummyDaoImpl implements DummyDao<byte[], String> {
 
     @Override
     public void delete(@NotNull String key) {
-        new File(data.getAbsolutePath() + key.toString()).delete();
+        new File(data.getAbsolutePath() + key).delete();
+        try {
+            new File(data.getAbsolutePath() + key + "deleted").createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @NotNull
     @Override
     public byte[] save(@NotNull byte[] value, @NotNull String key) {
-        final File file = new File(data.getAbsolutePath() + key.toString());
+        final File file = new File(data.getAbsolutePath() + key);
+        final File deletedFile = new File(data.getAbsolutePath() + key + "deleted");
         try {
             if (!file.exists()) {
                 file.createNewFile();
             }
             FileUtils.writeByteArrayToFile(file, value);
+
+            if (deletedFile.exists()){
+                deletedFile.delete();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -48,6 +58,16 @@ public class DummyDaoImpl implements DummyDao<byte[], String> {
     @NotNull
     @Override
     public byte[] get(@NotNull String key) throws IOException {
-        return FileUtils.readFileToByteArray(new File(data.getAbsolutePath() + key.toString()));
+        return FileUtils.readFileToByteArray(new File(data.getAbsolutePath() + key));
+    }
+
+    @Override
+    public boolean isDeleted(@NotNull String key) {
+        final File file = new File(data.getAbsolutePath() + key + "deleted");
+        if (file.exists()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

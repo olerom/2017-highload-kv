@@ -191,20 +191,12 @@ public class ThreeNodeTest extends ClusterTestBase {
         // Delete
         assertEquals(202, delete(1, key, 2, 3).getStatusLine().getStatusCode());
 
-//      Если не переподнять на другом порту, то будет постоянно ждать ответа.
-//      Хотя если телнетнуть, то будет работать.
-//      На данный момент не могу придумать решение.
-        endpoints.remove("http://localhost:" + port0);
-        port0 = randomPort();
-        endpoints.add("http://localhost:" + port0);
-
         // Start node 0
         storage0 = KVServiceFactory.create(port0, data0, endpoints);
         storage0.start();
 
         // Check
-        final HttpResponse response = get(2, key, 2, 3);
-//        final HttpResponse response = get(0, key, 2, 3);
+        final HttpResponse response = get(0, key, 2, 3);
         assertEquals(404, response.getStatusLine().getStatusCode());
     }
 

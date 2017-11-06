@@ -18,10 +18,13 @@ public class ServiceImpl implements KVService {
     @NotNull
     private final HttpServer server;
 
+    Configuration c;
+
     public ServiceImpl(@NotNull final Configuration configuration,
                        @NotNull final DummyDao<byte[], String> dao,
                        @NotNull final Topology topology) throws IOException {
         this.server = new KvServer(configuration, dao, topology);
+        c = configuration;
     }
 
     @Override
@@ -31,7 +34,16 @@ public class ServiceImpl implements KVService {
 
     @Override
     public void stop() {
+
+        System.out.println(server.getConnections());
         server.stop();
+        System.out.println(server.getKeepAlive());
+        System.out.println(server.getSelectorCount());
+        System.out.println(server.getConnections());
+//        System.out.println(server.getWorkers());
+        server.stop();
+//        System.out.println(server.getConnections());
+//        server.getConnections();
     }
 
 

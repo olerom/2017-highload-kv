@@ -12,13 +12,15 @@ import java.io.Serializable;
  */
 public interface DummyDao<V, K extends Serializable> {
 
-    public void delete(@NotNull K key);
+    void delete(@NotNull K key);
 
     @NotNull
-    public <T extends V> T save(@NotNull T value,@NotNull K key);
+    <T extends V> T save(@NotNull T value, @NotNull K key);
 
-    public boolean exists(@NotNull K key);
+    boolean exists(@NotNull K key);
 
     @NotNull
-    public V get(@NotNull K key) throws IOException;
+    V get(@NotNull K key) throws IOException;
+
+    boolean isDeleted(@NotNull K key);
 }

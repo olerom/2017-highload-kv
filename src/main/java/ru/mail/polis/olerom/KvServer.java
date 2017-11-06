@@ -1,7 +1,6 @@
 package ru.mail.polis.olerom;
 
 import one.nio.http.*;
-import one.nio.net.ConnectionString;
 import org.jetbrains.annotations.NotNull;
 import ru.mail.polis.olerom.cluster.BaseMessage;
 import ru.mail.polis.olerom.cluster.BodyMessage;
@@ -22,7 +21,7 @@ public class KvServer extends HttpServer {
     @NotNull
     private final static String REPLICAS_PARAMETER = "replicas=";
     @NotNull
-    private final static String DELIMETER = "/";
+    private final static String DELIMITER = "/";
     @NotNull
     private final static String EMPTY = "";
 
@@ -65,7 +64,7 @@ public class KvServer extends HttpServer {
             ack = topology.getQuorum();
             from = topology.getSize();
         } else {
-            final String[] tokens = request.getParameter(REPLICAS_PARAMETER).split(DELIMETER);
+            final String[] tokens = request.getParameter(REPLICAS_PARAMETER).split(DELIMITER);
             ack = Integer.valueOf(tokens[0]);
             from = Integer.valueOf(tokens[1]);
         }
@@ -87,6 +86,14 @@ public class KvServer extends HttpServer {
                         session.sendResponse(new Response(Response.OK, handledGet.getValue()));
                         break;
                     case BodyMessage.OK_EXCEPT_CURRENT:
+                        if (this.dao.exists(id) || !dao.isDeleted(id)) {
+                            session.sendResponse(new Response(Response.OK, handledGet.getValue()));
+                        } else {
+                            session.sendResponse(new Response(Response.NOT_FOUND, "Data is not found".getBytes()));
+                        }
+                        break;
+                    case BodyMessage.OK_EXCEPT_CURRENT_EMPTY:
+                    case BodyMessage.OK_EXCEPT_CURRENT_NULL:
                         if (this.dao.exists(id)) {
                             session.sendResponse(new Response(Response.OK, dao.get(id)));
                         } else {
@@ -124,7 +131,7 @@ public class KvServer extends HttpServer {
                             this.dao.delete(id);
                         }
                         session.sendResponse(new Response(Response.ACCEPTED, "Method was accepted".getBytes()));
-                        break;
+                        return;
 
                     case BaseMessage.NOT_ENOUGH_REPLICAS:
                         session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, "Not Enough Replicas".getBytes()));
@@ -136,6 +143,7 @@ public class KvServer extends HttpServer {
                 session.sendResponse(new Response(Response.METHOD_NOT_ALLOWED, "GET, PUT and DELETE are the only one methods being supported".getBytes()));
                 break;
         }
+
     }
 
     @Path("/v0/interconnection")
@@ -146,19 +154,20 @@ public class KvServer extends HttpServer {
             case Request.METHOD_DELETE:
                 if (dao.exists(id)) {
                     dao.delete(id);
-                    session.sendResponse(new Response(Response.OK, new byte[0]));
                 }
-                session.sendResponse(new Response(Response.OK, new byte[0]));
+                session.sendResponse(new Response(Response.OK, Response.EMPTY));
                 break;
             case Request.METHOD_PUT:
                 dao.save(request.getBody(), id);
-                session.sendResponse(new Response(Response.OK, new byte[0]));
+                session.sendResponse(new Response(Response.OK, Response.EMPTY));
                 break;
             case Request.METHOD_GET:
                 if (dao.exists(id)) {
                     session.sendResponse(new Response(Response.OK, dao.get(id)));
+                } else if (!dao.isDeleted(id)) {
+                    session.sendResponse(new Response(Response.OK, Response.EMPTY));
                 } else {
-                    session.sendResponse(new Response(Response.NO_CONTENT, new byte[0]));
+                    session.sendResponse(new Response(Response.NO_CONTENT, Response.EMPTY));
                 }
                 break;
         }

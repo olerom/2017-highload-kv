@@ -5,6 +5,8 @@ import one.nio.http.Response;
 import one.nio.net.ConnectionString;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
+
 /**
  * Date: 20.10.17
  *
@@ -41,39 +43,77 @@ public class NodeManager {
 
     @NotNull
     public BodyMessage handleGet(@NotNull final String id) {
-        int deaths = 0;
-        int visited = 0;
-        int satisfied = 0;
-        byte[] response = null;
+        int deadNodes = 0;
+        int visitedNodes = 0;
+        int respondedNodes = 0;
+        byte[] responseBody = null;
         for (String hostAndPort : topology.getNodes()) {
             if (hostAndPort.equals(METHOD_AND_DOMAIN + port)) {
                 continue;
             }
 
-            visited++;
+            visitedNodes++;
             final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
             try {
-                Response get = client.get(INTERCONNECTION_URI + id);
-                if (get.getStatus() == OK_STATUS) {
-                    satisfied++;
-                    response = get.getBody();
+                Response getResponse = client.get(INTERCONNECTION_URI + id);
+                if (getResponse.getStatus() == OK_STATUS) {
+                    respondedNodes++;
+                    if (responseBody == null) {
+                        responseBody = getResponse.getBody();
+                    }
+                    if (Arrays.equals(getResponse.getBody(), Response.EMPTY)) {
+                        responseBody = getResponse.getBody();
+                    }
                 }
             } catch (Exception e) {
-                deaths++;
+                deadNodes++;
                 e.printStackTrace();
             } finally {
                 client.close();
             }
         }
 
-
-        return new BodyMessage(satisfied, ack, from, visited, deaths, response);
+        return new BodyMessage(respondedNodes, ack, from, visitedNodes, deadNodes, responseBody);
     }
 
     @NotNull
     public BaseMessage handlePut(@NotNull final String id,
                                  @NotNull final byte[] value) {
-        int satisfied = 0;
+        int putNodes = 0;
+        int deadNodes = 0;
+        int visitedNodes = 0;
+
+        for (String hostAndPort : topology.getNodes()) {
+            if (hostAndPort.equals(METHOD_AND_DOMAIN + port)) {
+                continue;
+            }
+
+            if (visitedNodes - deadNodes > from) {
+                break;
+            }
+
+            visitedNodes++;
+            final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
+
+            try {
+                Response put = client.put(INTERCONNECTION_URI + id, value);
+                if (put.getStatus() == OK_STATUS) {
+                    putNodes++;
+                }
+            } catch (Exception e) {
+                deadNodes++;
+                e.printStackTrace();
+            } finally {
+                client.close();
+            }
+        }
+
+        return new BaseMessage(putNodes, ack, from);
+    }
+
+    @NotNull
+    public BaseMessage handleDelete(@NotNull final String id) {
+        int deletedNodes = 0;
         for (String hostAndPort : topology.getNodes()) {
             if (hostAndPort.equals(METHOD_AND_DOMAIN + port)) {
                 continue;
@@ -82,9 +122,9 @@ public class NodeManager {
             final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
 
             try {
-                Response put = client.put(INTERCONNECTION_URI + id, value);
-                if (put.getStatus() == OK_STATUS) {
-                    satisfied++;
+                Response delete = client.delete(INTERCONNECTION_URI + id);
+                if (delete.getStatus() == OK_STATUS) {
+                    deletedNodes++;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -93,30 +133,7 @@ public class NodeManager {
             }
         }
 
-        return new BaseMessage(satisfied, ack, from);
-    }
-
-    @NotNull
-    public BaseMessage handleDelete(@NotNull final String id) {
-        int deleted = 0;
-        for (String hostAndPort : topology.getNodes()) {
-            if (hostAndPort.equals(METHOD_AND_DOMAIN + port)) {
-                continue;
-            }
-
-            final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
-            try {
-                Response delete = client.delete(INTERCONNECTION_URI + id);
-                if (delete.getStatus() == OK_STATUS) {
-                    deleted++;
-                }
-                client.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        return new BaseMessage(deleted, ack, from);
+        return new BaseMessage(deletedNodes, ack, from);
     }
 }
 

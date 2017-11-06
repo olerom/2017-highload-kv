@@ -1,13 +1,11 @@
 package ru.mail.polis;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
-import org.omg.PortableServer.THREAD_POLICY_ID;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,7 +23,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TwoNodeTest extends ClusterTestBase {
     @Rule
-    public final Timeout globalTimeout = Timeout.seconds(3);
+    public final Timeout globalTimeout = Timeout.seconds(3000);
     private int port0;
     private int port1;
     private File data0;
@@ -142,8 +140,7 @@ public class TwoNodeTest extends ClusterTestBase {
         storage1.start();
 
         // Check
-//        final HttpResponse response = get(1, key, 2, 2);
-        final HttpResponse response = get(1, key, 1, 2);
+        final HttpResponse response = get(1, key, 2, 2);
         assertEquals(200, response.getStatusLine().getStatusCode());
         assertArrayEquals(value, payloadOf(response));
     }
@@ -162,17 +159,12 @@ public class TwoNodeTest extends ClusterTestBase {
         // Delete
         assertEquals(202, delete(1, key, 1, 2).getStatusLine().getStatusCode());
 
-        endpoints.remove("http://localhost:" + port0);
-        port0 = randomPort();
-        endpoints.add("http://localhost:" + port0);
-
         // Start node 0
         storage0 = KVServiceFactory.create(port0, data0, endpoints);
         storage0.start();
 
         // Check
-        final HttpResponse response = get(1, key, 2, 2);
-//        final HttpResponse response = get(0, key, 2, 2);
+        final HttpResponse response = get(0, key, 2, 2);
         assertEquals(404, response.getStatusLine().getStatusCode());
     }
 }
