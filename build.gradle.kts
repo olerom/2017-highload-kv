@@ -8,13 +8,10 @@ plugins {
 
 repositories {
     jcenter()
-
-//    For one-nio
-    maven { setUrl("https://jitpack.io") }
 }
 
 dependencies {
-    compile("com.github.olerom:one-nio:master-SNAPSHOT")
+    compile("ru.odnoklassniki:one-nio:1.0.1")
 
     // Apache commons
     compile("org.apache.commons:commons-io:1.3.2")

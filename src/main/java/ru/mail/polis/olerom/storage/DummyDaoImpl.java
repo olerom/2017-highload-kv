@@ -21,9 +21,9 @@ public class DummyDaoImpl implements DummyDao<byte[], String> {
 
     @Override
     public void delete(@NotNull String key) {
-        new File(data.getAbsolutePath() + key).delete();
+        new File(getFilePathNameByKey(key)).delete();
         try {
-            new File(data.getAbsolutePath() + key + "deleted").createNewFile();
+            new File(getFilePathNameDeletedByKey(key)).createNewFile();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -32,15 +32,15 @@ public class DummyDaoImpl implements DummyDao<byte[], String> {
     @NotNull
     @Override
     public byte[] save(@NotNull byte[] value, @NotNull String key) {
-        final File file = new File(data.getAbsolutePath() + key);
-        final File deletedFile = new File(data.getAbsolutePath() + key + "deleted");
+        final File file = new File(getFilePathNameByKey(key));
+        final File deletedFile = new File(getFilePathNameDeletedByKey(key));
         try {
             if (!file.exists()) {
                 file.createNewFile();
             }
             FileUtils.writeByteArrayToFile(file, value);
 
-            if (deletedFile.exists()){
+            if (deletedFile.exists()) {
                 deletedFile.delete();
             }
         } catch (IOException e) {
@@ -52,22 +52,32 @@ public class DummyDaoImpl implements DummyDao<byte[], String> {
 
     @Override
     public boolean exists(@NotNull String key) {
-        return new File(data.getAbsolutePath() + key.toString()).exists();
+        return new File(getFilePathNameByKey(key)).exists();
     }
 
     @NotNull
     @Override
     public byte[] get(@NotNull String key) throws IOException {
-        return FileUtils.readFileToByteArray(new File(data.getAbsolutePath() + key));
+        return FileUtils.readFileToByteArray(new File(getFilePathNameByKey(key)));
     }
 
     @Override
     public boolean isDeleted(@NotNull String key) {
-        final File file = new File(data.getAbsolutePath() + key + "deleted");
+        final File file = new File(getFilePathNameDeletedByKey(key));
         if (file.exists()) {
             return true;
         } else {
             return false;
         }
+    }
+
+    @NotNull
+    private String getFilePathNameByKey(@NotNull final String key) {
+        return data.getAbsolutePath() + "/" + key;
+    }
+
+    @NotNull
+    private String getFilePathNameDeletedByKey(@NotNull final String key) {
+        return getFilePathNameByKey(key) + "deleted";
     }
 }

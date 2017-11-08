@@ -47,13 +47,18 @@ public class NodeManager {
         int visitedNodes = 0;
         int respondedNodes = 0;
         byte[] responseBody = null;
+        if (from == 0){
+            return new BodyMessage(respondedNodes, ack, from, visitedNodes, deadNodes, responseBody);
+        }
         for (String hostAndPort : topology.getNodes()) {
             if (hostAndPort.equals(METHOD_AND_DOMAIN + port)) {
                 continue;
             }
 
             visitedNodes++;
+
             final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
+
             try {
                 Response getResponse = client.get(INTERCONNECTION_URI + id);
                 if (getResponse.getStatus() == OK_STATUS) {
@@ -88,11 +93,12 @@ public class NodeManager {
                 continue;
             }
 
-            if (visitedNodes - deadNodes > from) {
+            if (visitedNodes - deadNodes >= from) {
                 break;
             }
 
             visitedNodes++;
+
             final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
 
             try {

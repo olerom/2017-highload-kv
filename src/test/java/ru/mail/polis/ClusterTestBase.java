@@ -31,7 +31,7 @@ abstract class ClusterTestBase extends TestBase {
             @NotNull final String key,
             final int ack,
             final int from) throws IOException {
-        return Request.Get(url(node, key, ack, from)).execute().returnResponse();
+        return Request.Get(url(node, key, ack, from)).addHeader("Connection", "close").execute().returnResponse();
     }
 
     HttpResponse delete(
@@ -39,7 +39,7 @@ abstract class ClusterTestBase extends TestBase {
             @NotNull final String key,
             final int ack,
             final int from) throws IOException {
-        return Request.Delete(url(node, key, ack, from)).execute().returnResponse();
+        return Request.Delete(url(node, key, ack, from)).addHeader("Connection", "close").execute().returnResponse();
     }
 
     HttpResponse upsert(
@@ -48,6 +48,6 @@ abstract class ClusterTestBase extends TestBase {
             @NotNull final byte[] data,
             final int ack,
             final int from) throws IOException {
-        return Request.Put(url(node, key, ack, from)).bodyByteArray(data).execute().returnResponse();
+        return Request.Put(url(node, key, ack, from)).addHeader("Connection", "close").bodyByteArray(data).execute().returnResponse();
     }
 }
