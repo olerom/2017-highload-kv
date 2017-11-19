@@ -12,6 +12,7 @@
 !LICENSE
 !README.md
 !settings.gradle
+!*.lua
 
 # ...even if they are in subdirectories
 !*/
