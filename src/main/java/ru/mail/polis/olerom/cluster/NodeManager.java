@@ -24,20 +24,16 @@ public class NodeManager {
     private final Topology topology;
 
     private final int port;
-    private int ack;
-    private int from;
+    private final int ack;
+    private final int from;
 
     public NodeManager(@NotNull final Topology topology,
-                       final int port) {
+                       final int port,
+                       final int ack,
+                       final int from) {
         this.topology = topology;
         this.port = port;
-    }
-
-    public void setAck(final int ack) {
         this.ack = ack - 1;
-    }
-
-    public void setFrom(final int from) {
         this.from = from - 1;
     }
 
@@ -47,7 +43,7 @@ public class NodeManager {
         int visitedNodes = 0;
         int respondedNodes = 0;
         byte[] responseBody = null;
-        if (from == 0){
+        if (from == 0) {
             return new BodyMessage(respondedNodes, ack, from, visitedNodes, deadNodes, responseBody);
         }
         for (String hostAndPort : topology.getNodes()) {

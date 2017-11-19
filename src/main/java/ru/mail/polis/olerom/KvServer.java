@@ -33,15 +33,15 @@ public class KvServer extends HttpServer {
     private final Topology topology;
 
     @NotNull
-    private final NodeManager nodeManager;
+    private final Configuration configuration;
 
     public KvServer(@NotNull final Configuration configuration,
                     @NotNull final DummyDao<byte[], String> dao,
                     @NotNull final Topology topology) throws IOException {
         super(configuration.getServerConfig());
+        this.configuration = configuration;
         this.dao = dao;
         this.topology = topology;
-        this.nodeManager = new NodeManager(topology, configuration.getPort());
     }
 
     @Path("/v0/status")
@@ -75,73 +75,21 @@ public class KvServer extends HttpServer {
             return;
         }
 
-        nodeManager.setAck(ack);
-        nodeManager.setFrom(from);
+        final NodeManager nodeManager = new NodeManager(topology, configuration.getPort(), ack, from);
+        final ResponseHandler responseHandler = new ResponseHandler(nodeManager, session, dao);
 
         switch (request.getMethod()) {
             case Request.METHOD_GET:
-
-                final BodyMessage handledGet = nodeManager.handleGet(id);
-                switch (handledGet.getResult()) {
-                    case BodyMessage.OK:
-                        session.sendResponse(new Response(Response.OK, handledGet.getValue()));
-                        break;
-                    case BodyMessage.OK_EXCEPT_CURRENT:
-                        if (this.dao.exists(id) || !dao.isDeleted(id)) {
-                            session.sendResponse(new Response(Response.OK, handledGet.getValue()));
-                        } else {
-                            session.sendResponse(new Response(Response.NOT_FOUND, "Data is not found".getBytes()));
-                        }
-                        break;
-                    case BodyMessage.OK_EXCEPT_CURRENT_EMPTY:
-                    case BodyMessage.OK_EXCEPT_CURRENT_NULL:
-                        if (this.dao.exists(id)) {
-                            session.sendResponse(new Response(Response.OK, dao.get(id)));
-                        } else {
-                            session.sendResponse(new Response(Response.NOT_FOUND, "Data is not found".getBytes()));
-                        }
-                        break;
-                    case BodyMessage.NOT_FOUND:
-                        session.sendResponse(new Response(Response.NOT_FOUND, "Data is not found".getBytes()));
-                        break;
-                    default:
-                        session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, "Not Enough Replicas".getBytes()));
-                        break;
-                }
+                responseHandler.sendGetResponse(id);
                 break;
-
             case Request.METHOD_PUT:
-                final BaseMessage handledPut = nodeManager.handlePut(id, request.getBody());
-                switch (handledPut.getResult()) {
-                    case BaseMessage.OK:
-                        dao.save(request.getBody(), id);
-                        session.sendResponse(new Response(Response.CREATED, "Created".getBytes()));
-                        break;
-                    case BaseMessage.NOT_ENOUGH_REPLICAS:
-                        session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, "Not Enough Replicas".getBytes()));
-                        break;
-                }
-
+                responseHandler.sendPutResponse(id, request.getBody());
                 break;
             case Request.METHOD_DELETE:
-
-                final BaseMessage handledDelete = nodeManager.handleDelete(id);
-                switch (handledDelete.getResult()) {
-                    case BaseMessage.OK:
-                        if (dao.exists(id)) {
-                            this.dao.delete(id);
-                        }
-                        session.sendResponse(new Response(Response.ACCEPTED, "Method was accepted".getBytes()));
-                        return;
-
-                    case BaseMessage.NOT_ENOUGH_REPLICAS:
-                        session.sendResponse(new Response(Response.GATEWAY_TIMEOUT, "Not Enough Replicas".getBytes()));
-                        break;
-                }
-
+                responseHandler.sendDeleteResponse(id);
                 break;
             default:
-                session.sendResponse(new Response(Response.METHOD_NOT_ALLOWED, "GET, PUT and DELETE are the only one methods being supported".getBytes()));
+                responseHandler.sendMethodNotAllowedResponse();
                 break;
         }
 
