@@ -10,7 +10,7 @@
 !build.gradle.kts
 !gradlew
 !LICENSE
-!README.md
+!*.md
 !settings.gradle
 !*.lua
 
