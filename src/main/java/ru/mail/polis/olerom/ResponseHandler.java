@@ -25,17 +25,24 @@ public class ResponseHandler {
     @NotNull
     private final DummyDao<byte[], String> dao;
 
+    private final int ack;
+    private final int from;
+
     public ResponseHandler(@NotNull final NodeManager nodeManager,
                            @NotNull final HttpSession session,
-                           @NotNull final DummyDao<byte[], String> dao) {
+                           @NotNull final DummyDao<byte[], String> dao,
+                           final int ack,
+                           final int from) {
         this.nodeManager = nodeManager;
         this.session = session;
         this.dao = dao;
+        this.ack = ack - 1;
+        this.from = from - 1;
     }
 
     public void sendGetResponse(@NotNull final String id) throws IOException {
 
-        final BodyMessage handledGet = nodeManager.handleGet(id);
+        final BodyMessage handledGet = nodeManager.handleGet(id, ack, from);
         switch (handledGet.getResult()) {
             case BodyMessage.OK:
                 session.sendResponse(new Response(Response.OK, handledGet.getValue()));
@@ -66,7 +73,7 @@ public class ResponseHandler {
 
     public void sendPutResponse(@NotNull final String id,
                                 @NotNull final byte[] body) throws IOException {
-        final BaseMessage handledPut = nodeManager.handlePut(id, body);
+        final BaseMessage handledPut = nodeManager.handlePut(id, body, ack, from);
         switch (handledPut.getResult()) {
             case BaseMessage.OK:
                 dao.save(body, id);
@@ -80,7 +87,7 @@ public class ResponseHandler {
 
 
     public void sendDeleteResponse(@NotNull final String id) throws IOException {
-        final BaseMessage handledDelete = nodeManager.handleDelete(id);
+        final BaseMessage handledDelete = nodeManager.handleDelete(id, ack, from);
         switch (handledDelete.getResult()) {
             case BaseMessage.OK:
                 if (dao.exists(id)) {

@@ -32,13 +32,17 @@ public class KvServer extends HttpServer {
     @NotNull
     private final Configuration configuration;
 
+    @NotNull
+    private final NodeManager nodeManager;
+
     public KvServer(@NotNull final Configuration configuration,
                     @NotNull final DummyDao<byte[], String> dao,
                     @NotNull final Topology topology) throws IOException {
         super(configuration.getServerConfig());
-        this.configuration = configuration;
         this.dao = dao;
         this.topology = topology;
+        this.configuration = configuration;
+        this.nodeManager = new NodeManager(topology, configuration.getPort());
     }
 
     @Path("/v0/status")
@@ -72,8 +76,7 @@ public class KvServer extends HttpServer {
             return;
         }
 
-        final NodeManager nodeManager = new NodeManager(topology, configuration.getPort(), ack, from);
-        final ResponseHandler responseHandler = new ResponseHandler(nodeManager, session, dao);
+        final ResponseHandler responseHandler = new ResponseHandler(nodeManager, session, dao, ack, from);
 
         switch (request.getMethod()) {
             case Request.METHOD_GET:

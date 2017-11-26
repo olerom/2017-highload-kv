@@ -1,11 +1,17 @@
 package ru.mail.polis.olerom.cluster;
 
 import one.nio.http.HttpClient;
+import one.nio.http.HttpException;
+import one.nio.http.Request;
 import one.nio.http.Response;
 import one.nio.net.ConnectionString;
+import one.nio.net.Socket;
+import one.nio.pool.PoolException;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Date: 20.10.17
@@ -23,22 +29,28 @@ public class NodeManager {
     @NotNull
     private final Topology topology;
 
+    @NotNull
+    private final HashMap<String, HttpClient> client;
+
     private final int port;
-    private final int ack;
-    private final int from;
 
     public NodeManager(@NotNull final Topology topology,
-                       final int port,
-                       final int ack,
-                       final int from) {
+                       final int port) {
         this.topology = topology;
         this.port = port;
-        this.ack = ack - 1;
-        this.from = from - 1;
+        this.client = new HashMap<>(topology.getSize());
+        topology.getNodes().forEach((node) -> {
+            if (!node.equals(METHOD_AND_DOMAIN + port)) {
+                final ConnectionString connectionString = new ConnectionString(node);
+                this.client.put(node, new HttpClient(connectionString));
+            }
+        });
     }
 
     @NotNull
-    public BodyMessage handleGet(@NotNull final String id) {
+    public BodyMessage handleGet(@NotNull final String id,
+                                 final int ack,
+                                 final int from) {
         int deadNodes = 0;
         int visitedNodes = 0;
         int respondedNodes = 0;
@@ -53,10 +65,8 @@ public class NodeManager {
 
             visitedNodes++;
 
-            final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
-
             try {
-                Response getResponse = client.get(INTERCONNECTION_URI + id);
+                Response getResponse = client.get(hostAndPort).get(INTERCONNECTION_URI + id);
                 if (getResponse.getStatus() == OK_STATUS) {
                     respondedNodes++;
                     if (responseBody == null) {
@@ -69,8 +79,6 @@ public class NodeManager {
             } catch (Exception e) {
                 deadNodes++;
                 e.printStackTrace();
-            } finally {
-                client.close();
             }
         }
 
@@ -79,7 +87,9 @@ public class NodeManager {
 
     @NotNull
     public BaseMessage handlePut(@NotNull final String id,
-                                 @NotNull final byte[] value) {
+                                 @NotNull final byte[] value,
+                                 final int ack,
+                                 final int from) {
         int putNodes = 0;
         int deadNodes = 0;
         int visitedNodes = 0;
@@ -95,18 +105,14 @@ public class NodeManager {
 
             visitedNodes++;
 
-            final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
-
             try {
-                Response put = client.put(INTERCONNECTION_URI + id, value);
+                Response put = client.get(hostAndPort).put(INTERCONNECTION_URI + id, value);
                 if (put.getStatus() == OK_STATUS) {
                     putNodes++;
                 }
             } catch (Exception e) {
                 deadNodes++;
                 e.printStackTrace();
-            } finally {
-                client.close();
             }
         }
 
@@ -114,24 +120,22 @@ public class NodeManager {
     }
 
     @NotNull
-    public BaseMessage handleDelete(@NotNull final String id) {
+    public BaseMessage handleDelete(@NotNull final String id,
+                                    final int ack,
+                                    final int from) {
         int deletedNodes = 0;
         for (String hostAndPort : topology.getNodes()) {
             if (hostAndPort.equals(METHOD_AND_DOMAIN + port)) {
                 continue;
             }
 
-            final HttpClient client = new HttpClient(new ConnectionString(hostAndPort));
-
             try {
-                Response delete = client.delete(INTERCONNECTION_URI + id);
+                Response delete = client.get(hostAndPort).delete(INTERCONNECTION_URI + id);
                 if (delete.getStatus() == OK_STATUS) {
                     deletedNodes++;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-            } finally {
-                client.close();
             }
         }
 

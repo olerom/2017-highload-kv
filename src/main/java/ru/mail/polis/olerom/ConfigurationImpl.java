@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public class ConfigurationImpl implements Configuration {
     @NotNull
     private final static String CONF = "\n" +
+            "selectors: 4\n" +
             "acceptors:\n" +
             " - port: {PORT}\n";
 
